@@ -37,9 +37,8 @@ using std::endl;
     }
 
     void livro::print_info() {
-	cout << "*********************************" << endl;
         cout << "Titulo: " << titulo << endl;
         cout << "Ano: " << ano << endl;
-        cout << "Autor: " << endl;
+        cout << "Autor: " << endl; 
         autor_livro->print_info();
     }

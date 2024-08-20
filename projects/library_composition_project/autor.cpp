@@ -39,7 +39,6 @@ using std::string;
     }
 
     void autor::print_info() {
-	cout << "-------------------------------" << endl;
         cout << "Nome: " << nome << endl;
         cout << "Data de nascimento: " << data_nascimento << endl;
         cout << "Nacionalidade: " << nacionalidade << endl;
