@@ -260,6 +260,20 @@ public:
     }
 };
 
+class tecnico: public membro_clube {
+    int experiencia;
+public:
+    tecnico(const string& n, int i, double s, int e): membro_clube(n,i,s), experiencia(e) {}
+    tecnico(const string& n, int i, int e): membro_clube(n,i), experiencia(e) {} // caso de não fornecer salário
+
+    int get_experiencia() const { return experiencia; }
+    void set_experiencia(int e) { experiencia = e; }   
+
+    double calcular_salario() const override {
+        return get_salario() + (experiencia * 200);
+    }
+};
+
 // Inicialização do contador estático
 int pessoa::contador = 0;
 
