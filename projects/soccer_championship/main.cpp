@@ -183,7 +183,7 @@ public:
  * e salário do jogador, além de permitir o cálculo do salário total
  * e a comparação de jogadores com base no número de gols.
  */
-class jogador: public membro_clube {
+class jogador: virtual public membro_clube {
     string posicao; /**< Posição do jogador (goleiro, zagueiro, meio-campo, atacante) */
     int gols_marcados; /**< Número total de gols marcados pelo jogador */
 
@@ -260,17 +260,77 @@ public:
     }
 };
 
-class tecnico: public membro_clube {
-    int experiencia;
+/**
+ * @brief Classe que representa um técnico de futebol.
+ * 
+ * A classe técnico herda de membro_clube e adiciona o atributo de anos de experiência,
+ * além de implementar o cálculo de salário com base na experiência.
+ */
+class tecnico: virtual public membro_clube {
+    int experiencia; /**< Anos de experiência do técnico */
+
 public:
-    tecnico(const string& n, int i, double s, int e): membro_clube(n,i,s), experiencia(e) {}
-    tecnico(const string& n, int i, int e): membro_clube(n,i), experiencia(e) {} // caso de não fornecer salário
+    /**
+     * @brief Construtor que inicializa um técnico com nome, idade, salário e experiência.
+     * 
+     * @param n Nome do técnico.
+     * @param i Idade do técnico.
+     * @param s Salário do técnico.
+     * @param e Anos de experiência do técnico.
+     */
+    tecnico(const string& n, int i, double s, int e): membro_clube(n, i, s), experiencia(e) {}
 
+    /**
+     * @brief Construtor que inicializa um técnico com nome, idade e experiência, com salário padrão de 0.
+     * 
+     * @param n Nome do técnico.
+     * @param i Idade do técnico.
+     * @param e Anos de experiência do técnico.
+     */
+    tecnico(const string& n, int i, int e): membro_clube(n, i), experiencia(e) {}
+
+    /**
+     * @brief Retorna os anos de experiência do técnico.
+     * 
+     * @return int Anos de experiência.
+     */
     int get_experiencia() const { return experiencia; }
-    void set_experiencia(int e) { experiencia = e; }   
 
+    /**
+     * @brief Define os anos de experiência do técnico.
+     * 
+     * @param e Novo valor de anos de experiência.
+     */
+    void set_experiencia(int e) { experiencia = e; }
+
+    /**
+     * @brief Calcula o salário total do técnico com base nos anos de experiência.
+     * 
+     * O salário total é o salário base mais um bônus de 200 unidades para cada ano de experiência.
+     * 
+     * @return double Salário total calculado.
+     */
     double calcular_salario() const override {
         return get_salario() + (experiencia * 200);
+    }
+};
+
+class tecnico_jogador: virtual public tecnico, virtual public jogador {
+    double bonus_duplo_papel;
+public:
+    tecnico_jogador(const string& n, int i, double s, int e, string pos, int gm): tecnico(n,i,s,e), jogador(n,i,s,pos, gm) {}
+    tecnico_jogador(const string& n, int i, int e, string pos, int gm): tecnico(n,i,e), jogador(n,i, pos, gm) {} // caso não forneça salário
+
+    double get_bonus_duplo_papel() const { return bonus_duplo_papel; }
+    void set_bonus_duplo_papel(double bdp) { bonus_duplo_papel = bdp; }
+
+    double calcular_salario() const override {
+        return jogador::calcular_salario() + tecnico::calcular_salario() + bonus_duplo_papel;
+    }
+
+    friend std::ostream& operator<<(std::ostream& out, const tecnico_jogador& tj) {
+        out << "tecnico_jogador(" << tj.get_nome() << ", " << tj.get_idade() << ", " << tj.get_gols_marcados() << tj.get_posicao() << tj.get_experiencia() << tj.calcular_salario() << ")" << endl;
+        return out;
     }
 };
 
