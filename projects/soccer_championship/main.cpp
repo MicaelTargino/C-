@@ -3,6 +3,7 @@
 #include <vector>
 #include <memory>
 #include <cctype> // para usar a função toupper(), que converte um caractere para maiúsculo.
+#include <algorithm> // para usar a função sort, para exibir a tabela do campeonato ordenada pelos times de maiores pontuações
 
 using std::cout;
 using std::cin;
@@ -12,6 +13,7 @@ using std::vector;
 using std::ostream;
 using std::istream;
 using std::shared_ptr;
+using std::make_shared;
 
 #define PONTUACAO_VITORIA 3
 #define PONTUACAO_EMPATE 1
@@ -264,6 +266,12 @@ public:
     bool operator<(const jogador& outro) const {
         return gols_marcados < outro.gols_marcados;
     }
+
+    void exibir_informacoes() override {
+        cout << "Jogador: " << get_nome() << ", Idade: " << get_idade()
+             << ", Posição: " << get_posicao() << ", Gols Marcados: " << get_gols_marcados()
+             << ", Salário: " << calcular_salario() << endl;
+    }
 };
 
 /**
@@ -319,6 +327,11 @@ public:
     double calcular_salario() const override {
         return get_salario() + (experiencia * 200);
     }
+
+    void exibir_informacoes() override {
+        cout << "Técnico: " << get_nome() << ", Idade: " << get_idade()
+             << ", Experiência: " << get_experiencia() << " anos, Salário: " << calcular_salario() << endl;
+    }
 };
 
 /**
@@ -340,8 +353,8 @@ public:
      * @param pos Posição do jogador.
      * @param gm Número de gols marcados pelo jogador.
      */
-    tecnico_jogador(const string& n, int i, double s, int e, string pos, int gm)
-        : membro_clube(n, i, s), tecnico(n, i, s, e), jogador(n, i, s, pos, gm), bonus_duplo_papel(0) {}
+    tecnico_jogador(const string& n, int i, double s, int e, string pos, int gm, double b)
+        : membro_clube(n, i, s), tecnico(n, i, s, e), jogador(n, i, s, pos, gm), bonus_duplo_papel(b) {}
 
     /**
      * @brief Construtor que inicializa um técnico_jogador com nome, idade, experiência, posição e gols marcados, com salário padrão de 0.
@@ -352,8 +365,8 @@ public:
      * @param pos Posição do jogador.
      * @param gm Número de gols marcados pelo jogador.
      */
-    tecnico_jogador(const string& n, int i, int e, string pos, int gm)
-        : membro_clube(n, i), tecnico(n, i, e), jogador(n, i, pos, gm), bonus_duplo_papel(0) {}
+    tecnico_jogador(const string& n, int i, int e, string pos, int gm, double b)
+        : membro_clube(n, i), tecnico(n, i, e), jogador(n, i, pos, gm), bonus_duplo_papel(b) {}
 
     /**
      * @brief Retorna o bônus por atuar como técnico e jogador.
@@ -376,6 +389,15 @@ public:
      */
     double calcular_salario() const override {
         return jogador::calcular_salario() + tecnico::calcular_salario() + bonus_duplo_papel;
+    }
+
+    void exibir_informacoes() override {
+        cout << "Nome: " << get_nome() << "\n"
+             << "Idade: " << get_idade() << "\n"
+             << "Posição: " << get_posicao() << "\n"
+             << "Gols Marcados: " << get_gols_marcados() << "\n"
+             << "Experiência: " << get_experiencia() << " anos\n"
+             << "Salário Total: " << calcular_salario() << "\n";
     }
 
     /**
@@ -721,9 +743,201 @@ public:
     }
 };
 
+
+/**
+ * @brief Classe que representa um campeonato de futebol.
+ * 
+ * A classe campeonato gerencia os times que participam do campeonato, 
+ * os jogos que ocorrem durante o campeonato, e exibe a classificação 
+ * dos times de acordo com suas pontuações.
+ */
+class campeonato {
+    string nome_campeonato; /**< Nome do campeonato */
+    vector<shared_ptr<time_futebol>> lista_times; /**< Lista de times participantes do campeonato */
+    vector<shared_ptr<jogo>> lista_jogos; /**< Lista de jogos que ocorrem no campeonato */
+
+public:
+    /**
+     * @brief Construtor que inicializa o nome do campeonato.
+     * 
+     * @param nome Nome do campeonato.
+     */
+    campeonato(const string& nome): nome_campeonato(nome) {}
+
+    /**
+     * @brief Retorna o nome do campeonato.
+     * 
+     * @return string Nome do campeonato.
+     */
+    string get_nome_campeonato() const { return nome_campeonato; }
+
+    /**
+     * @brief Define o nome do campeonato.
+     * 
+     * @param nome Novo nome para o campeonato.
+     */
+    void set_nome_campeonato(const string& nome) { nome_campeonato = nome; }
+
+    /**
+     * @brief Adiciona um time ao campeonato.
+     * 
+     * @param t Referência constante para o time a ser adicionado ao campeonato.
+     */
+    void adicionar_time(shared_ptr<time_futebol> t) {
+        lista_times.push_back(t);
+    }
+
+    /**
+     * @brief Adiciona um jogo ao campeonato.
+     * 
+     * @param j Referência constante para o jogo a ser adicionado ao campeonato.
+     */
+    void adicionar_jogo(shared_ptr<jogo> j) {
+        lista_jogos.push_back(j);
+    }
+
+    /**
+     * @brief Exibe a tabela de classificação dos times ordenados por pontuação.
+     */
+    void exibir_classificacao() const {
+        // Copia a lista de times para ordenar sem modificar a original
+        vector<shared_ptr<time_futebol>> times_ordenados = lista_times;
+
+        // Ordena os times pela pontuação em ordem decrescente
+        std::sort(times_ordenados.begin(), times_ordenados.end(), [](const shared_ptr<time_futebol>& a, const shared_ptr<time_futebol>& b) {
+            return a->get_pontuacao() > b->get_pontuacao();
+        });
+
+        // Exibe a classificação
+        cout << "Classificacaoo do Campeonato: " << nome_campeonato << endl;
+        for (const auto& t : times_ordenados) {
+            cout << "Time: " << t->get_nome() << " - Pontuacao: " << t->get_pontuacao() << endl;
+        }
+    }
+
+    /**
+     * @brief Exibe a lista de jogos do campeonato.
+     */
+    void exibir_jogos() const {
+        cout << "Jogos no Campeonato: " << nome_campeonato << endl;
+        for (const auto& j : lista_jogos) {
+            j->exibir_informacoes();
+        }
+    }
+};
+
 // Inicialização do contador estático
 int pessoa::contador = 0;
 
-int main(void) {
+int main() {
+    // Criação do campeonato "Campeonato Quadrangular"
+    campeonato camp("Campeonato Quadrangular");
+
+    // Criação dos técnicos
+    auto tecnico1 = make_shared<tecnico>("Jose Silva", 45, 5000, 20);  // nome, idade, salário, anos de experiência
+    auto tecnico2 = make_shared<tecnico>("Carlos Souza", 40, 4800, 18);  // nome, idade, salário, anos de experiência
+    auto tecnico3 = make_shared<tecnico>("Ana Lima", 38, 4700, 17);  // nome, idade, salário, anos de experiência
+    auto tecnico4 = make_shared<tecnico>("Marcos Azevedo", 50, 5200, 22);  // nome, idade, salário, anos de experiência
+
+    // Criação dos jogadores para cada time
+    auto jogador1 = make_shared<jogador>("Joao", 28, 3000, "Atacante", 10);  // nome, idade, salário, posição, gols marcados
+    auto jogador2 = make_shared<jogador>("Pedro", 25, 3200, "Meio-campo", 8);
+    auto jogador3 = make_shared<jogador>("Lucas", 30, 3500, "Zagueiro", 3);
+    auto jogador4 = make_shared<jogador>("Andre", 27, 2900, "Goleiro", 0);
+    auto jogador5 = make_shared<jogador>("Ricardo", 29, 3100, "Atacante", 7);
+
+    auto jogador6 = make_shared<jogador>("Paulo", 28, 3200, "Atacante", 9);
+    auto jogador7 = make_shared<jogador>("Rafael", 23, 3100, "Meio-campo", 6);
+    auto jogador8 = make_shared<jogador>("Thiago", 26, 3300, "Zagueiro", 4);
+    auto jogador9 = make_shared<jogador>("Fabio", 30, 3400, "Goleiro", 0);
+    auto jogador10 = make_shared<jogador>("Sergio", 24, 3000, "Atacante", 8);
+
+    auto jogador11 = make_shared<jogador>("Felipe", 29, 3200, "Atacante", 12);
+    auto jogador12 = make_shared<jogador>("Gustavo", 27, 3150, "Meio-campo", 7);
+    auto jogador13 = make_shared<jogador>("Matheus", 28, 3300, "Zagueiro", 5);
+    auto jogador14 = make_shared<jogador>("Vitor", 26, 3400, "Goleiro", 0);
+    auto jogador15 = make_shared<jogador>("Leandro", 30, 3100, "Atacante", 10);
+
+    auto jogador16 = make_shared<jogador>("Igor", 30, 3200, "Atacante", 9);
+    auto jogador17 = make_shared<jogador>("Jorge", 24, 3050, "Meio-campo", 6);
+    auto jogador18 = make_shared<jogador>("Ronaldo", 29, 3350, "Zagueiro", 2);
+    auto jogador19 = make_shared<jogador>("Gabriel", 28, 3250, "Goleiro", 0);
+    auto jogador20 = make_shared<jogador>("Eduardo", 26, 3150, "Atacante", 11);
+
+    // Criação dos times
+    auto time1 = make_shared<time_futebol>("Tigres", tecnico1);  // nome do time, técnico
+    auto time2 = make_shared<time_futebol>("Leoes", tecnico2);  // nome do time, técnico
+    auto time3 = make_shared<time_futebol>("Aguias", tecnico3);  // nome do time, técnico
+    auto time4 = make_shared<time_futebol>("Fenix", tecnico4);  // nome do time, técnico
+
+    // Adicionando jogadores aos times
+    time1->adicionar_jogador(*jogador1);
+    time1->adicionar_jogador(*jogador2);
+    time1->adicionar_jogador(*jogador3);
+    time1->adicionar_jogador(*jogador4);
+    time1->adicionar_jogador(*jogador5);
+
+    time2->adicionar_jogador(*jogador6);
+    time2->adicionar_jogador(*jogador7);
+    time2->adicionar_jogador(*jogador8);
+    time2->adicionar_jogador(*jogador9);
+    time2->adicionar_jogador(*jogador10);
+
+    time3->adicionar_jogador(*jogador11);
+    time3->adicionar_jogador(*jogador12);
+    time3->adicionar_jogador(*jogador13);
+    time3->adicionar_jogador(*jogador14);
+    time3->adicionar_jogador(*jogador15);
+
+    time4->adicionar_jogador(*jogador16);
+    time4->adicionar_jogador(*jogador17);
+    time4->adicionar_jogador(*jogador18);
+    time4->adicionar_jogador(*jogador19);
+    time4->adicionar_jogador(*jogador20);
+
+    // Adicionando técnico-jogador ao time 4 (Fênix)
+    auto meu_tecnico_jogador = make_shared<tecnico_jogador>("Marcos Azevedo", 50, 5200, 22, "Meio-campo", 5, 1500); // nome, idade, salário, experiência, posição, gols, bônus
+    time4->adicionar_jogador(*meu_tecnico_jogador);
+
+    // Adicionando times ao campeonato
+    camp.adicionar_time(time1);
+    camp.adicionar_time(time2);
+    camp.adicionar_time(time3);
+    camp.adicionar_time(time4);
+
+    // Criação de dois juízes
+    auto juiz1 = make_shared<juiz>("Carlos Henrique", 45, 100);  // nome, idade, partidas arbitradas
+    auto juiz2 = make_shared<juiz>("Fernando Almeida", 50, 120);  // nome, idade, partidas arbitradas
+
+    // Criação e registro dos jogos
+    auto jogo1 = make_shared<jogo>(time1, time2, juiz1);  // time da casa, time visitante, juiz
+    jogo1->registrar_resultado(2, 1);  // Gols time1 (casa), Gols time2 (visitante)
+
+    auto jogo2 = make_shared<jogo>(time3, time4, juiz2);  // time da casa, time visitante, juiz
+    jogo2->registrar_resultado(3, 3);  // Gols time3 (casa), Gols time4 (visitante)
+
+    auto jogo3 = make_shared<jogo>(time1, time3, juiz1);
+    jogo3->registrar_resultado(1, 2);  // Gols time1 (casa), Gols time3 (visitante)
+
+    auto jogo4 = make_shared<jogo>(time2, time4, juiz2);
+    jogo4->registrar_resultado(0, 2);  // Gols time2 (casa), Gols time4 (visitante)
+
+    auto jogo5 = make_shared<jogo>(time1, time4, juiz1);
+    jogo5->registrar_resultado(3, 2);  // Gols time1 (casa), Gols time4 (visitante)
+
+    auto jogo6 = make_shared<jogo>(time2, time3, juiz2);
+    jogo6->registrar_resultado(1, 1);  // Gols time2 (casa), Gols time3 (visitante)
+
+    // Adicionando os jogos ao campeonato
+    camp.adicionar_jogo(jogo1);
+    camp.adicionar_jogo(jogo2);
+    camp.adicionar_jogo(jogo3);
+    camp.adicionar_jogo(jogo4);
+    camp.adicionar_jogo(jogo5);
+    camp.adicionar_jogo(jogo6);
+
+    // Exibe a tabela de classificação final
+    camp.exibir_classificacao();
+
     return 0;
 }
